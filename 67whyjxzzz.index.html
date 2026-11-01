@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>67whyjxzzz.com - Edición 67</title>
+    <style>
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; margin: 0; padding: 0; }
+        body { background-color: #0b0f19; color: #e2e8f0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
+        .header { text-align: center; margin-bottom: 10px; }
+        .domain-title { font-size: 1.8rem; font-weight: bold; color: #00f0ff; text-shadow: 0 0 8px rgba(0, 240, 255, 0.4); letter-spacing: 1px; }
+        .subtitle { font-size: 0.85rem; color: #94a3b8; }
+        #game-canvas { background-color: #161e2e; border: 2px solid #00f0ff; border-radius: 8px; box-shadow: 0 0 15px rgba(0, 240, 255, 0.2); max-width: 100%; height: auto; }
+        .controls-panel { display: flex; gap: 15px; margin-top: 15px; width: 100%; max-width: 600px; justify-content: center; }
+        .btn { background: linear-gradient(135deg, #1e293b, #0f172a); border: 2px solid #00f0ff; color: #00f0ff; padding: 12px 24px; font-size: 1rem; font-weight: bold; border-radius: 6px; cursor: pointer; touch-action: manipulation; flex: 1; max-width: 200px; text-align: center; }
+        .btn:active { background: #00f0ff; color: #0b0f19; }
+        .btn-duck { border-color: #ff9900; color: #ff9900; }
+        .btn-duck:active { background: #ff9900; color: #0b0f19; }
+        .instructions { margin-top: 10px; font-size: 0.8rem; color: #64748b; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="domain-title">67whyjxzzz.com</div>
+        <div class="subtitle">Modo de Bajo Consumo (Optimizado 2 Cores / 1GB RAM)</div>
+    </div>
+    <canvas id="game-canvas" width="600" height="200"></canvas>
+    <div class="controls-panel">
+        <button class="btn" id="btn-jump">SALTAR [Espacio]</button>
+        <button class="btn btn-duck" id="btn-duck">AGACHARSE [S / Flecha Abajo]</button>
+    </div>
+    <div class="instructions">Controles: Espacio / W / Flecha Arriba (Saltar) | S / Flecha Abajo (Agacharse)</div>
+    <script>
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        let score = 0;
+        let highScore = localStorage.getItem('67_highscore') || 0;
+        let gameOver = false;
+        let gameStarted = false;
+        let frameCount = 0;
+        let gameSpeed = 4;
+        const player = { x: 50, y: 130, width: 30, height: 40, velocityY: 0, gravity: 0.6, jumpPower: -10, isGrounded: true, isDucking: false };
+        const obstacles = [];
+        function drawPlayer() {
+            ctx.fillStyle = '#00f0ff';
+            ctx.font = 'bold ' + (player.isDucking ? '24px' : '32px') + ' monospace';
+            ctx.fillText('67', player.x, player.isDucking ? player.y + 20 : player.y + 30);
+        }
+        function spawnObstacle() {
+            if (frameCount % 90 === 0) {
+                const type = Math.random() > 0.4 ? 'ground' : 'air';
+                obstacles.push({ x: canvas.width, y: type === 'ground' ? 140 : 90, width: 20, height: type === 'ground' ? 30 : 20, type: type });
+            }
+        }
+        function updateObstacles() {
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].x -= gameSpeed;
+                ctx.fillStyle = obstacles[i].type === 'ground' ? '#ff0055' : '#ff9900';
+                ctx.fillRect(obstacles[i].x, obstacles[i].y, obstacles[i].width, obstacles[i].height);
+                let pWidth = player.isDucking ? 35 : player.width;
+                let pHeight = player.isDucking ? 20 : player.height;
+                let pY = player.isDucking ? player.y + 15 : player.y;
+                if (player.x < obstacles[i].x + obstacles[i].width && player.x + pWidth > obstacles[i].x && pY < obstacles[i].y + obstacles[i].height && pY + pHeight > obstacles[i].y) {
+                    gameOver = true;
+                    if (score > highScore) { highScore = Math.floor(score); localStorage.setItem('67_highscore', highScore); }
+                }
+                if (obstacles[i].x + obstacles[i].width < 0) { obstacles.splice(i, 1); }
+            }
+        }
+        function jump() {
+            if (!gameStarted || gameOver) {
+                gameStarted = true; gameOver = false; score = 0; obstacles.length = 0; gameSpeed = 4; player.y = 130; loop(); return;
+            }
+            if (player.isGrounded && !player.isDucking) { player.velocityY = player.jumpPower; player.isGrounded = false; }
+        }
+        function updatePlayer() {
+            player.velocityY += player.gravity;
+            player.y += player.velocityY;
+            if (player.y >= 130) { player.y = 130; player.velocityY = 0; player.isGrounded = true; }
+        }
+        function drawHUD() {
+            ctx.fillStyle = '#ffffff'; ctx.font = '14px monospace';
+            ctx.fillText(`Puntos: ${Math.floor(score)}  Récord: ${highScore}`, 10, 20);
+            if (!gameStarted) {
+                ctx.fillStyle = '#00f0ff'; ctx.font = '18px monospace'; ctx.fillText('Presiona Espacio o Toca para Empezar', 110, 100);
+            } else if (gameOver) {
+                ctx.fillStyle = '#ff0055'; ctx.font = '22px monospace'; ctx.fillText('¡JUEGO TERMINADO!', 190, 90);
+                ctx.fillStyle = '#ffffff'; ctx.font = '14px monospace'; ctx.fillText('Presiona Espacio o Toca para Reiniciar', 145, 120);
+            }
+        }
+        function loop() {
+            ctx.fillStyle = '#161e2e'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00f0ff'; ctx.fillRect(0, 170, canvas.width, 2);
+            if (gameStarted && !gameOver) { frameCount++; score += 0.1; gameSpeed += 0.001; updatePlayer(); spawnObstacle(); updateObstacles(); }
+            drawPlayer(); drawHUD();
+            if (!gameOver && gameStarted) { requestAnimationFrame(loop); }
+        }
+        window.addEventListener('keydown', (e) => {
+            if (['Space', 'ArrowUp', 'KeyW'].includes(e.code) || e.key === ' ') { e.preventDefault(); jump(); }
+            if (['ArrowDown', 'KeyS'].includes(e.code)) { e.preventDefault(); player.isDucking = true; }
+        });
+        window.addEventListener('keyup', (e) => { if (['ArrowDown', 'KeyS'].includes(e.code)) player.isDucking = false; });
+        document.getElementById('btn-jump').addEventListener('click', jump);
+        const duckBtn = document.getElementById('btn-duck');
+        duckBtn.addEventListener('touchstart', (e) => { e.preventDefault(); player.isDucking = true; });
+        duckBtn.addEventListener('touchend', (e) => { e.preventDefault(); player.isDucking = false; });
+        duckBtn.addEventListener('mousedown', () => player.isDucking = true);
+        duckBtn.addEventListener('mouseup', () => player.isDucking = false);
+        loop();
+    </script>
+</body>
+</html>
